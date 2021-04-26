@@ -120,5 +120,9 @@ require (
 // replace github.com/hashicorp/horizon => ../horizon
 // replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
 
-// v0.3.11 panics for some reason on our tests
-replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
+replace (
+	// https://github.com/hashicorp/waypoint-plugin-sdk/pull/27
+	github.com/hashicorp/waypoint-plugin-sdk => github.com/swisscom/waypoint-plugin-sdk v0.0.0-20210527143018-501c19fa6ab1
+	// v0.3.11 panics for some reason on our tests
+	github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
+)
