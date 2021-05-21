@@ -42,15 +42,12 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 	}
 	defer op.Close()
 
-	res, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), op)
+	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), op)
 	if err != nil {
 		return nil, err
 	}
 
-	resMsg := msg.(*pb.Deployment)
-	a.logger.Debug("doOperation result", "res", res)
-
-	return resMsg, nil
+	return msg.(*pb.Deployment), nil
 }
 
 // deployEvalContext sets the HCL evaluation context for `deploy` blocks.
