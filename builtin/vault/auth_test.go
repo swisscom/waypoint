@@ -35,9 +35,9 @@ func TestAuthMethodConfig(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.Name, func(t *testing.T) {
-			require := require.New(t)
+			req := require.New(t)
 			result, _ := authMethodConfig(&tt.Config)
-			require.Equal(result, tt.Result)
+			req.Equal(result, tt.Result)
 		})
 	}
 }

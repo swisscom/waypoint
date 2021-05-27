@@ -616,4 +616,7 @@ type sourceConfig struct {
 	GCPServiceAccount string `hcl:"gcp_service_account,optional"`
 	GCPProject        string `hcl:"gcp_project,optional"`
 	GCPJWTExp         int    `hcl:"gcp_jwt_exp,optional"`
+
+	LdapUsername string `hcl:"ldap_username,optional"`
+	LdapPassword string `hcl:"ldap_password,optional"`
 }

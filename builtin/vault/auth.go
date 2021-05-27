@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/ldap"
 	"reflect"
 	"strings"
 	"sync"
@@ -59,6 +60,8 @@ func (cs *ConfigSourcer) initAuthMethod(
 		method, err = gcp.NewGCPAuthMethod(authConfig)
 	case "kubernetes":
 		method, err = kubernetes.NewKubernetesAuthMethod(authConfig)
+	case "ldap":
+		method, err = ldap.NewLdapAuthMethod(authConfig)
 	default:
 		return fmt.Errorf("unknown auth method: %s", cs.config.AuthMethod)
 	}
