@@ -3,7 +3,6 @@ package vault
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/ldap"
 	"reflect"
 	"strings"
 	"sync"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/aws"
 	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/gcp"
 	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/kubernetes"
+	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/ldap"
 )
 
 // initAuthMethod initializes a goroutine that grabs a Vault token
