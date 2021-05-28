@@ -134,4 +134,5 @@ in pkgs.mkShell rec {
   PGUSER = "postgres";
   PGPASSWORD = "postgres";
   DATABASE_URL = "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=disable";
+  GOROOT = [ "${pkgs.go.out}/share/go" ];
 }

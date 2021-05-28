@@ -46,19 +46,27 @@ func TestLoad_compare(t *testing.T) {
 				require.Equal(t, "HELLO", c.Project)
 			},
 		},
+
+		{
+			"project_static_config.hcl",
+			"",
+			func (t *testing.T, c *Config){
+				require.Equal(t, "hello", c.Project)
+			},
+		},
 	}
 
 	for _, tt := range cases {
 		t.Run(tt.File, func(t *testing.T) {
-			require := require.New(t)
+			r := require.New(t)
 
 			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), nil)
 			if tt.Err != "" {
-				require.Error(err)
-				require.Contains(err.Error(), tt.Err)
+				r.Error(err)
+				r.Contains(err.Error(), tt.Err)
 				return
 			}
-			require.NoError(err)
+			r.NoError(err)
 
 			tt.Func(t, cfg)
 		})

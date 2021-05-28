@@ -28,7 +28,7 @@ var (
 	refreshPeriod = 30 * time.Second
 )
 
-// ConfigSourcer implements component.ConfigSourcer for Vault
+// ConfigSourcer implements component.ConfigSourcer and component.StaticConfigSourcer for Vault
 type ConfigSourcer struct {
 	// Client, if set, will be used as the client instead of initializing
 	// based on the config. This is only used for tests.

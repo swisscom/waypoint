@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/zclconf/go-cty/cty/function"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -111,6 +112,7 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 	ctx := EvalContext(nil, pwd).NewChild()
 	addPathValue(ctx, pathData)
 	addWorkspaceValue(ctx, opts.Workspace)
+	addGlobalFunctions(ctx)
 
 	// Decode
 	var cfg hclConfig
@@ -137,6 +139,13 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 		path:      filepath.Dir(path),
 		pathData:  pathData,
 	}, nil
+}
+
+func addGlobalFunctions(ctx *hcl.EvalContext) {
+	if ctx.Functions == nil {
+		ctx.Functions = map[string]function.Function{}
+	}
+	ctx.Functions["btconfig"] = btConfigFunc
 }
 
 // HCLContext returns the eval context for this configuration.

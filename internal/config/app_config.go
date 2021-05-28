@@ -164,8 +164,8 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 }
 
 var (
-	typeDynamicConfig = cty.Capsule("configval",
-		reflect.TypeOf((*pb.ConfigVar_DynamicVal)(nil)).Elem())
+	typeDynamicConfig = cty.Capsule("configval", reflect.TypeOf((*pb.ConfigVar_DynamicVal)(nil)).Elem())
+	typeBtConfig = cty.Capsule("btval", reflect.TypeOf((*pb.ConfigVar_BtVal)(nil)).Elem())
 
 	// configDynamicFunc implements the configdynamic() HCL function.
 	configDynamicFunc = function.New(&function.Spec{
@@ -188,6 +188,33 @@ var (
 			}
 
 			return cty.CapsuleVal(typeDynamicConfig, &pb.ConfigVar_DynamicVal{
+				From:   args[0].AsString(),
+				Config: config,
+			}), nil
+		},
+	})
+
+	// btConfigFunc implements the btconfig() HCL function.
+	btConfigFunc = function.New(&function.Spec{
+		Params: []function.Parameter{
+			{
+				Name: "from",
+				Type: cty.String,
+			},
+
+			{
+				Name: "config",
+				Type: cty.Map(cty.String),
+			},
+		},
+		Type: function.StaticReturnType(typeBtConfig),
+		Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+			var config map[string]string
+			if err := gocty.FromCtyValue(args[1], &config); err != nil {
+				return cty.NilVal, err
+			}
+
+			return cty.CapsuleVal(typeBtConfig, &pb.ConfigVar_BtVal{
 				From:   args[0].AsString(),
 				Config: config,
 			}), nil

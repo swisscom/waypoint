@@ -2453,8 +2453,11 @@ message ConfigVar {
     // static, direct value.
     string static = 2;
 
-    // dynamically sourced value
+    // dynamically sourced value available at runtime via Waypoint's Entrypoint
     DynamicVal dynamic = 6;
+
+    // dynamically sourced value available at build-time
+    BtVal dynamic_bt = 10;
   }
 
   // Indicates if the variable is not meant to be exposed applications or runners.
@@ -2467,7 +2470,19 @@ message ConfigVar {
 
   // DynamicVal is the configuration for dynamic values for configuration.
   message DynamicVal {
-    // from is the config source plugin to use
+    // from is the config source plugin to use (plugin must implement component.ConfigSourcer)
+    string from = 1;
+
+    // config is the configuration for the config source plugin that
+    // defines how the value is read. For example, for a "Vault" config
+    // source this may contain the path in the KV store to read the value.
+    map<string, string> config = 2;
+  }
+
+  // BtVal is the configuration for build-time variables.
+  // These values are intended to be used for templating purposes and will not be used in Waypoint Entrypoint.
+  message BtVal {
+    // from is the config source plugin to use (plugin must implement component.StaticConfigSourcer)
     string from = 1;
 
     // config is the configuration for the config source plugin that

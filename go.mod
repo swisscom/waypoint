@@ -122,3 +122,4 @@ require (
 
 // v0.3.11 panics for some reason on our tests
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
+replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
