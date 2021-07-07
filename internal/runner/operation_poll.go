@@ -35,28 +35,29 @@ func (r *Runner) executePollOp(
 		return nil, err
 	}
 
-	// Get the current ref for the default workspace.
-	//
-	// NOTE(mitchellh): for now, we only support the default workspace. We
-	// will expand support to polling non-default workspaces in the future.
+	// For each workspace this project has been deployed to, check if there is a ScopedSetting that
+	// overrides the original DataSource
+
 	log.Trace("finding latest ref")
-	var currentRef *pb.Job_DataSource_Ref
+	var defaultRef *pb.Job_DataSource_Ref
+	dataSourceRef := map[string]*pb.Job_DataSource_Ref{}
+
 	if resp != nil {
 		for _, p := range resp.Workspaces {
+			dataSourceRef[p.Workspace.Workspace] = p.DataSourceRef
 			if p.Workspace.Workspace == "default" {
-				currentRef = p.DataSourceRef
-				break
+				defaultRef = p.DataSourceRef
 			}
 		}
 	}
-	log.Debug("current ref for poll operation", "ref", currentRef)
+	log.Debug("current ref for poll operation", "ref", defaultRef)
 
 	// Get any changes
-	newRef, err := sourcer.Changes(ctx, log, ui, job.DataSource, currentRef)
+	newRef, ignore, err := sourcer.Changes(ctx, log, ui, job.DataSource, defaultRef, r.tempDir)
 	if err != nil {
 		return nil, err
 	}
-	log.Debug("result of Changes, nil means no changes", "result", newRef)
+	log.Debug("result of Changes, nil means no changes", "result", newRef, "ignore", ignore)
 
 	// If we have no changes, then we're done.
 	if newRef == nil {
@@ -90,6 +91,17 @@ func (r *Runner) executePollOp(
 		Operation: &pb.Job_Up{
 			Up: &pb.Job_UpOp{},
 		},
+	}
+
+	// If we're ignoring, we change the job to a noop job. This will
+	// still trigger the machinery to update the ref associated with
+	// the project/app and avoids the poll job from having to have too
+	// much access or require new APIs to do this.
+	if ignore {
+		log.Debug("changes marked as ignorable, scheduling a noop job to update our data ref")
+		jobTemplate.Operation = &pb.Job_Noop_{
+			Noop: &pb.Job_Noop{},
+		}
 	}
 
 	log.Debug("queueing job")
@@ -133,7 +145,7 @@ func (r *Runner) executePollOp(
 	return &pb.Job_Result{
 		Poll: &pb.Job_PollResult{
 			JobId:  queueResp.JobId,
-			OldRef: currentRef,
+			OldRef: defaultRef,
 			NewRef: newRef,
 		},
 	}, nil
