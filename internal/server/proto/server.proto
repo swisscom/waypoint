@@ -479,6 +479,8 @@ message Project {
   // WIP: Variable values stored on the server. These values are set in the UI.
   repeated Variable variables = 9;
 
+  map<string, ScopedProjectSettings> scoped_settings = 10;
+
   enum Format {
     HCL = 0; // We assume HCL by default
     JSON = 1;
@@ -492,6 +494,15 @@ message Project {
     // The server may enforce minimum values, in which case a value lower
     // than the minimum will be ignored.
     string interval = 2;
+  }
+
+  // ScopedProjectSettings stores the project settings for a specific workspace
+  // Every setting in a project scoped setting will override its workspace "default" counterpart - for example
+  // setting a different data_source_poll here will make the Waypoint Runner fetch from another remote for the
+  // associated workspace.
+  message ScopedProjectSettings {
+    Job.DataSource data_source = 1;
+    repeated Variable variables = 2;
   }
 }
 
@@ -2042,7 +2053,7 @@ message Hostname {
   // target_labels are the raw label targets given to the URL service.
   // We can't reproduce the richer "Target" structure yet but in the future
   // we may expose that.
-  map<string,string> target_labels = 3;
+  map<string, string> target_labels = 3;
 
   message Target {
     oneof target {
@@ -2206,7 +2217,7 @@ message Build {
   Artifact artifact = 4;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 5;
+  map<string, string> labels = 5;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 10;
@@ -2305,7 +2316,7 @@ message PushedArtifact {
   string build_id = 5;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 6;
+  map<string, string> labels = 6;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 12;
@@ -2430,7 +2441,7 @@ message Deployment {
   google.protobuf.Any deployment = 6;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 7;
+  map<string, string> labels = 7;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 14;
@@ -2667,7 +2678,7 @@ message Release {
   string deployment_id = 5;
 
   // labels are the set of labels that are present on this build.
-  map<string,string> labels = 6;
+  map<string, string> labels = 6;
 
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 14;
@@ -3144,8 +3155,8 @@ message ExecStreamResponse {
 
     enum Channel {
       UNKNOWN = 0;
-      STDOUT  = 1;
-      STDERR  = 2;
+      STDOUT = 1;
+      STDERR = 2;
     }
   }
 }
@@ -3215,7 +3226,7 @@ message EntrypointConfig {
     Component component = 1;
 
     // labels are the set of labels that are present on the deployment.
-    map<string,string> labels = 2;
+    map<string, string> labels = 2;
   }
 }
 
@@ -3261,8 +3272,8 @@ message EntrypointExecRequest {
 
     enum Channel {
       UNKNOWN = 0;
-      STDOUT  = 1;
-      STDERR  = 2;
+      STDOUT = 1;
+      STDERR = 2;
     }
   }
 

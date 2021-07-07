@@ -118,11 +118,13 @@ func (s *service) runPollQueuer(
 		if err == nil {
 			// Outcome (1) above
 			log.Debug("dataset change, restarting poll queuer")
+			time.Sleep(200 * time.Millisecond)
 			continue
 		}
 
 		if ctx.Err() != nil {
 			// Outcome (2) above
+			time.Sleep(200 * time.Millisecond)
 			return
 		}
 
@@ -131,6 +133,7 @@ func (s *service) runPollQueuer(
 			// be in outcome (3) but if this happened then... just restart
 			// cause its weird.
 			log.Warn("poll deadline wasn't hit but watchset triggered")
+			time.Sleep(200 * time.Millisecond)
 			continue
 		}
 
@@ -140,10 +143,8 @@ func (s *service) runPollQueuer(
 		// pollItem is nil then we have no pollTime and therefore no loopCtx either.
 		// This means outcome (1) or (2) MUST happen.
 		if pollItem == nil {
-			log.Error("reached outcome (3) in poller with nil pollItem. " +
-				"This should not happen. This usually means there is a bug " +
-				"in the pollHandler implementation")
-			time.Sleep(1 * time.Second)
+			log.Error("reached outcome (3) in poller with nil pollItem. This should not happen.")
+			time.Sleep(200 * time.Millisecond)
 			continue
 		}
 
@@ -151,9 +152,7 @@ func (s *service) runPollQueuer(
 		log.Trace("queueing poll job")
 		queueJobRequest, err := handler.PollJob(log, pollItem)
 		if err != nil {
-			log.Warn("error building a poll job request. This should not happen "+
-				"repeatedly. If you see this in your log repeatedly, report a bug.",
-				"err", err)
+			log.Warn("error building a poll job request", "err", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -161,6 +160,8 @@ func (s *service) runPollQueuer(
 		resp, err := s.QueueJob(ctx, queueJobRequest)
 		if err != nil {
 			log.Warn("error queueing a poll job", "err", err)
+			// Avoid clogging the server if a polling request failed due to a precondition check
+			// that in turn causes an infinite loop here
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -177,5 +178,9 @@ func (s *service) runPollQueuer(
 			time.Sleep(1 * time.Minute)
 			continue
 		}
+
+		// If, for any reason, the polling operation immediately fail / succeeds, this protection will make sure we
+		// don't cause an infinite loop that then causes the CPU to spike to 100%
+		time.Sleep(500 * time.Millisecond)
 	}
 }
