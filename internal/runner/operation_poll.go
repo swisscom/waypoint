@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/waypoint/internal/datasource"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -31,7 +32,7 @@ func (r *Runner) executePollOp(
 			Project: job.Application.Project,
 		},
 	})
-	if err != nil {
+	if err != nil || resp == nil {
 		return nil, err
 	}
 
@@ -39,24 +40,78 @@ func (r *Runner) executePollOp(
 	// overrides the original DataSource
 
 	log.Trace("finding latest ref")
-	var defaultRef *pb.Job_DataSource_Ref
-	dataSourceRef := map[string]*pb.Job_DataSource_Ref{}
+	var queueResults []*pb.Job_PollResult
+	for _, wsProject := range resp.Workspaces {
+		var dataSource *pb.Job_DataSource
+		dataSourceRef := wsProject.DataSourceRef
+		wsName := wsProject.Workspace.Workspace
 
-	if resp != nil {
-		for _, p := range resp.Workspaces {
-			dataSourceRef[p.Workspace.Workspace] = p.DataSourceRef
-			if p.Workspace.Workspace == "default" {
-				defaultRef = p.DataSourceRef
+		// Check if we have a custom data source
+		v, ok := resp.Project.ScopedSettings[wsName]
+		if wsName == "default" || !ok {
+			// Workspace default or custom data source not found -> default Data Source
+			dataSource = resp.Project.DataSource
+		} else if v != nil {
+			dataSource = v.DataSource
+		}
+
+		if dataSource == nil {
+			log.Warn("data source is nil", "workspace", wsName, "project", resp.Project)
+			continue
+		}
+
+		jobResult, err := r.detectChanges(log, wsName, resp.Project, dataSource, dataSourceRef, sourcer, ui, ctx, job)
+		if err != nil {
+			log.Error("unable to detect changes",
+				"err", err,
+				"project", resp.Project.Name,
+				"workspace", wsName,
+			)
+		} else {
+			poll := jobResult.Poll
+			if poll == nil {
+				log.Error("returned result is not a poll result",
+					"jobResult", poll,
+					"project", resp.Project.Name,
+					"workspace", wsName,
+				)
+				continue
 			}
+			queueResults = append(queueResults, poll)
 		}
 	}
-	log.Debug("current ref for poll operation", "ref", defaultRef)
 
-	// Get any changes
-	newRef, ignore, err := sourcer.Changes(ctx, log, ui, job.DataSource, defaultRef, r.tempDir)
-	if err != nil {
-		return nil, err
+	return &pb.Job_Result{
+		MultiPoll: &pb.Job_MultiPollResult{
+			Results: queueResults,
+		},
+	}, nil
+}
+
+
+func (r *Runner) detectChanges(log hclog.Logger,
+	workspace string,
+	project *pb.Project,
+	dataSource *pb.Job_DataSource,
+	ref *pb.Job_DataSource_Ref,
+	sourcer datasource.Sourcer,
+	ui terminal.UI,
+	ctx context.Context,
+	job *pb.Job,
+) (*pb.Job_Result, error) {
+	if ref == nil {
+		// It shouldn't be nil, so return
+		return nil, fmt.Errorf("ref cannot be nil")
 	}
+
+	log.Debug("current ref for poll operation", "ref", ref)
+
+	// Get any change
+	newRef, ignore, err := sourcer.Changes(ctx, log, ui, dataSource, ref, r.tempDir)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get changes")
+	}
+
 	log.Debug("result of Changes, nil means no changes", "result", newRef, "ignore", ignore)
 
 	// If we have no changes, then we're done.
@@ -80,8 +135,7 @@ func (r *Runner) executePollOp(
 			},
 		},
 
-		// NOTE(mitchellh): default workspace only for now
-		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+		Workspace: &pb.Ref_Workspace{Workspace: workspace},
 
 		// Reuse the same data source and bring in our overrides to set the ref
 		DataSource:          job.DataSource,
@@ -119,7 +173,7 @@ func (r *Runner) executePollOp(
 
 			// Target only our project, we don't need an app for this.
 			Application: &pb.Ref_Application{
-				Project: resp.Project.Name,
+				Project: project.Name,
 			},
 
 			// Copy all of these fields from the job template since we
@@ -129,7 +183,7 @@ func (r *Runner) executePollOp(
 			DataSource:          jobTemplate.DataSource,
 			DataSourceOverrides: jobTemplate.DataSourceOverrides,
 
-			// Doing a plain old "up"
+			// Queue the job
 			Operation: &pb.Job_QueueProject{
 				QueueProject: &pb.Job_QueueProjectOp{
 					JobTemplate: jobTemplate,
@@ -141,11 +195,10 @@ func (r *Runner) executePollOp(
 		return nil, err
 	}
 	log.Debug("job queued", "job_id", queueResp.JobId)
-
 	return &pb.Job_Result{
 		Poll: &pb.Job_PollResult{
 			JobId:  queueResp.JobId,
-			OldRef: defaultRef,
+			OldRef: ref,
 			NewRef: newRef,
 		},
 	}, nil

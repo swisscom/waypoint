@@ -1249,7 +1249,8 @@ message Job {
     PollResult poll = 11;
     StatusReportResult status_report = 12;
     StartTaskResult start_task = 13;
-  }
+    MultiPollResult multi_poll = 14;
+}
 
   message DataSource {
     oneof source {
@@ -1605,6 +1606,10 @@ message Job {
     // NOTE(mitchellh): In the future I think we could have options here
     // to poll only specific workspaces or the full project or whatever.
     // At the time of writing this, we only support single workspace anyways.
+  }
+
+  message MultiPollResult {
+    repeated PollResult results = 1;
   }
 
   message PollResult {
