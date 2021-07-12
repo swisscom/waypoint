@@ -74,7 +74,7 @@ func (c *InitCommand) Run(args []string) int {
 			c.ui.Output("")
 			c.ui.Output(
 				"Waypoint has detected an existing directory '"+dir+"' and will not \n"+
-				"overwrite an existing application with a remote one.",
+					"overwrite an existing application with a remote one.",
 				terminal.WithErrorStyle(),
 			)
 
@@ -175,7 +175,7 @@ func (c *InitCommand) Run(args []string) int {
 	c.ui.Output("")
 	c.ui.Output(
 		"You may now call 'waypoint up' to deploy your project or\n" +
-		"commands such as 'waypoint build' to perform steps individually.",
+			"commands such as 'waypoint build' to perform steps individually.",
 	)
 
 	return 0

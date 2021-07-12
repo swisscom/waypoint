@@ -85,7 +85,6 @@ func (c *ProjectDetailCommand) formatScopedSettings(
 	return scopedSettings.String()
 }
 
-
 func (c *ProjectDetailCommand) addGitDsTableEntries(tbl *terminal.Table, git *gen.Job_DataSource_Git) {
 	addKV(tbl, "Git Url", git.Git.Url)
 	addKV(tbl, "Git Ref", git.Git.Ref)
@@ -100,10 +99,9 @@ func (c *ProjectDetailCommand) addGitAuthData(tbl *terminal.Table, auth interfac
 		addKV(tbl, "Git Username", v.Basic.Username)
 		addKV(tbl, "Git Password", strings.Repeat("*", len(v.Basic.Password)))
 	case *gen.Job_Git_SSH:
- 		addKV(tbl, "Git SSH Private Key Password", strings.Repeat("*", len(v.Password)))
+		addKV(tbl, "Git SSH Private Key Password", strings.Repeat("*", len(v.Password)))
 	}
 }
-
 
 func (c *ProjectDetailCommand) formatGitAuthTypeName(auth interface{}) string {
 	switch auth.(type) {
@@ -115,7 +113,6 @@ func (c *ProjectDetailCommand) formatGitAuthTypeName(auth interface{}) string {
 	return "unknown"
 }
 
-
 func (c *ProjectDetailCommand) formatDataSourceName(dataSource *gen.Job_DataSource) string {
 	switch dataSource.Source.(type) {
 	case *gen.Job_DataSource_Git:
@@ -126,9 +123,7 @@ func (c *ProjectDetailCommand) formatDataSourceName(dataSource *gen.Job_DataSour
 	return "unknown"
 }
 
-
-
-func addKV(tbl *terminal.Table, key string, val string){
+func addKV(tbl *terminal.Table, key string, val string) {
 	tbl.Rich([]string{
 		key, val,
 	}, nil)

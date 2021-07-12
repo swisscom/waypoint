@@ -480,7 +480,7 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"project detail": func() (cli.Command, error){
+		"project detail": func() (cli.Command, error) {
 			return &ProjectDetailCommand{
 				baseCommand: baseCommand,
 			}, nil

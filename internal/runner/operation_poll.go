@@ -3,8 +3,9 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/waypoint/internal/datasource"
 	"strings"
+
+	"github.com/hashicorp/waypoint/internal/datasource"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -88,7 +89,6 @@ func (r *Runner) executePollOp(
 	}, nil
 }
 
-
 func (r *Runner) detectChanges(log hclog.Logger,
 	workspace string,
 	project *pb.Project,
@@ -99,11 +99,6 @@ func (r *Runner) detectChanges(log hclog.Logger,
 	ctx context.Context,
 	job *pb.Job,
 ) (*pb.Job_Result, error) {
-	if ref == nil {
-		// It shouldn't be nil, so return
-		return nil, fmt.Errorf("ref cannot be nil")
-	}
-
 	log.Debug("current ref for poll operation", "ref", ref)
 
 	// Get any change
@@ -111,7 +106,6 @@ func (r *Runner) detectChanges(log hclog.Logger,
 	if err != nil {
 		return nil, fmt.Errorf("unable to get changes")
 	}
-
 	log.Debug("result of Changes, nil means no changes", "result", newRef, "ignore", ignore)
 
 	// If we have no changes, then we're done.
