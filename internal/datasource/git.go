@@ -55,9 +55,10 @@ func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_
 
 	// Start building the result
 	result := &pb.Job_Git{
-		Url:  cfg.Url,
-		Path: cfg.Path,
-		Ref:  cfg.Ref,
+		Url:                      cfg.Url,
+		Path:                     cfg.Path,
+		IgnoreChangesOutsidePath: cfg.IgnoreChangesOutsidePath,
+		Ref:                      cfg.Ref,
 	}
 	switch {
 	case cfg.Username != "":
@@ -614,7 +615,7 @@ type gitConfig struct {
 	SSHKey                   string `hcl:"key,optional"`
 	SSHKeyPassword           string `hcl:"key_password,optional"`
 	Ref                      string `hcl:"ref,optional"`
-	IgnoreChangesOutsidePath bool   `hcl:"ignore_changes_outside_path"`
+	IgnoreChangesOutsidePath bool   `hcl:"ignore_changes_outside_path,optional"`
 }
 
 var _ Sourcer = (*GitSource)(nil)
