@@ -104,7 +104,7 @@ func (r *Runner) detectChanges(log hclog.Logger,
 	// Get any change
 	newRef, ignore, err := sourcer.Changes(ctx, log, ui, dataSource, ref, r.tempDir)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get changes")
+		return nil, fmt.Errorf("unable to get changes: %v", err)
 	}
 	log.Debug("result of Changes, nil means no changes", "result", newRef, "ignore", ignore)
 
